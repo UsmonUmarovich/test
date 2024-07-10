@@ -1,0 +1,10 @@
+{
+    "execMap": {
+        "js": "node --harmony"
+    },
+    "ignore": [
+        "data",
+        ".git",
+        "node_modules"
+    ]
+}
