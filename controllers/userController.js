@@ -10,7 +10,7 @@ import {
   updateDoc,
   deleteDoc,
 } from "firebase/firestore";
-import User from "../model/UserModel.js";
+import User from "../model/userModel.js";
 
 const db = getFirestore(firebase);
 
