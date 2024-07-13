@@ -1,15 +1,23 @@
-import { initializeApp } from "firebase/app";
+import admin from "firebase-admin";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCKJksMRrT4AdF9e-I5yDT_xwl4oL56LvE",
-  authDomain: "test-d4ff8.firebaseapp.com",
-  projectId: "test-d4ff8",
-  storageBucket: "test-d4ff8.appspot.com",
-  messagingSenderId: "221788458708",
-  appId: "1:221788458708:web:ecea098c1f7e8dfb8cf541",
-  measurementId: "G-CTR4BN1GDD"
+const loadServiceAccount = () => {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const jsonPath = join(__dirname, "./serviceAccountKey.json");
+  return JSON.parse(readFileSync(jsonPath, "utf-8"));
 };
 
-const firebase = initializeApp(firebaseConfig);
+const serviceAccount = loadServiceAccount();
 
-export default firebase
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL:
+    "https://test-d4ff8-default-rtdb.asia-southeast1.firebasedatabase.app", // Replace with your database URL
+});
+
+const db = admin.firestore();
+
+export default db;
