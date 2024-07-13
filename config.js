@@ -1,23 +1,23 @@
-import admin from "firebase-admin";
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import "dotenv/config";
 
-const loadServiceAccount = () => {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const jsonPath = join(__dirname, "./serviceAccountKey.json");
-  return JSON.parse(readFileSync(jsonPath, "utf-8"));
-};
+const serviceAccountBase64 = process.env.SERVICE_ACCOUNT_KEY;
 
-const serviceAccount = loadServiceAccount();
+if (!serviceAccountBase64) {
+  throw new Error("Missing FIREBASE_SERVICE_ACCOUNT environment variable");
+}
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+const serviceAccount = JSON.parse(
+  Buffer.from(serviceAccountBase64, "base64").toString("utf-8")
+);
+
+initializeApp({
+  credential: cert(serviceAccount),
   databaseURL:
-    "https://test-d4ff8-default-rtdb.asia-southeast1.firebasedatabase.app", // Replace with your database URL
+    "https://test-d4ff8-default-rtdb.asia-southeast1.firebasedatabase.app",
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 export default db;
