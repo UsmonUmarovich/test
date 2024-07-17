@@ -1,71 +1,82 @@
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import db from "../config.js";
+
+const imagesCollection = collection(db, "images");
 
 export const createImage = async (req, res) => {
   try {
-    const newImage = req.body;
-    const docRef = await db.collection("images").add(newImage);
+    const docRef = await addDoc(imagesCollection, req.body);
     res
       .status(201)
-      .json({ message: "Image uploaded successfully", docId: docRef.id });
+      .json({ message: "Image created successfully", id: docRef.id });
   } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-export const getImage = async (req, res) => {
-  try {
-    const docRef = db.collection("images").doc(req.params.id);
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      res.status(404).json({ message: "No image found" });
-    } else {
-      res.status(200).json(doc.data());
-    }
-  } catch (error) {
-    res.status(400).send(`Error getting image: ${error.message}`);
+    res.status(400).json(error);
   }
 };
 
 export const getImages = async (req, res) => {
   try {
-    const snapshot = await db.collection("images").get();
-    if (snapshot.empty) {
-      res.status(404).json({ message: "No images found" });
-      return;
-    } else {
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      res.status(200).json(items);
-    }
+    const querySnapshot = await getDocs(imagesCollection);
+    const images = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(images);
   } catch (error) {
-    res.status(400).send(`Error getting items: ${error.message}`);
+    res.status(500).json(error);
+  }
+};
+
+export const getImage = async (req, res) => {
+  try {
+    const imageDoc = doc(imagesCollection, req.params.id);
+    const imageSnapshot = await getDoc(imageDoc);
+    if (!imageSnapshot.exists()) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+    res.status(200).json({ id: imageSnapshot.id, ...imageSnapshot.data() });
+  } catch (error) {
+    res.status(500).json(error);
   }
 };
 
 export const updateImage = async (req, res) => {
   try {
-    const docRef = db.collection("images").doc(req.params.id);
-    const updatedImage = req.body;
-    if ((await docRef.get()).exists) {
-      await docRef.update(updatedImage);
-      res.status(200).json({ message: "Image updated successfully" });
+    const imageDoc = doc(imagesCollection, req.params.id);
+    if ((await getDoc(imageDoc)).exists()) {
+      await updateDoc(imageDoc, req.body);
+      res
+        .status(200)
+        .json({ message: "Image updated successfully", id: req.params.id });
     } else {
-      res.status(404).json({ message: "No image found to update" });
+      res.status(404).json({ message: "Image not found" });
     }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error);
   }
 };
 
 export const deleteImage = async (req, res) => {
   try {
-    const docRef = db.collection("images").doc(req.params.id);
-    if ((await docRef.get()).exists) {
-      await docRef.delete();
-      res.status(200).json({ message: "Image deleted successfully" });
+    const imageDoc = doc(imagesCollection, req.params.id);
+    if ((await getDoc(imageDoc)).exists()) {
+      await deleteDoc(imageDoc);
+      res
+        .status(200)
+        .json({ message: "Image deleted successfully", id: req.params.id });
     } else {
-      res.status(404).json({ message: "No image found to delete" });
+      res.status(404).json({ message: "Image not found" });
     }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json(error);
   }
 };

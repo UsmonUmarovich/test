@@ -1,71 +1,82 @@
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
 import db from "../config.js";
+
+const usersCollection = collection(db, "users");
 
 export const createUser = async (req, res) => {
   try {
-    const newUser = req.body;
-    const docRef = await db.collection("users").add(newUser);
+    const docRef = await addDoc(usersCollection, req.body);
     res
       .status(201)
-      .json({ message: "User created successfully", docId: docRef.id });
+      .json({ message: "User created successfully", id: docRef.id });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error);
   }
 };
 
 export const getUser = async (req, res) => {
   try {
-    const docRef = db.collection("users").doc(req.params.id);
-    const doc = await docRef.get();
-    if (!doc.exists) {
-      res.status(404).json({ message: "No user found" });
-    } else {
-      res.status(200).json(doc.data());
+    const userDoc = doc(usersCollection, req.params.id);
+    const userSnapshot = await getDoc(userDoc);
+    if (!userSnapshot.exists()) {
+      return res.status(404).json({ message: "User not found" });
     }
+    res.status(200).json({ id: userSnapshot.id, ...userSnapshot.data() });
   } catch (error) {
-    res.status(400).send(`Error getting user: ${error.message}`);
+    res.status(500).json(error);
   }
 };
 
 export const getUsers = async (req, res) => {
   try {
-    const snapshot = await db.collection("users").get();
-    if (snapshot.empty) {
-      res.status(404).json({ message: "No users found" });
-      return;
-    } else {
-      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      res.status(200).json(items);
-    }
+    const querySnapshot = await getDocs(usersCollection);
+    const users = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    res.status(200).json(users);
   } catch (error) {
-    res.status(400).send(`Error getting items: ${error.message}`);
+    res.status(500).json(error);
   }
 };
 
 export const updateUser = async (req, res) => {
   try {
-    const docRef = db.collection("users").doc(req.params.id);
-    const updatedUser = req.body;
-    if ((await docRef.get()).exists) {
-      await docRef.update(updatedUser);
-      res.status(200).json({ message: "User updated successfully" });
+    const userDoc = doc(usersCollection, req.params.id);
+    if ((await getDoc(userDoc)).exists()) {
+      await updateDoc(userDoc, req.body);
+      res
+        .status(200)
+        .json({ message: "User updated successfully", id: req.params.id });
     } else {
-      res.status(404).json({ message: "No user found to update" });
+      res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json(error);
   }
 };
 
 export const deleteUser = async (req, res) => {
   try {
-    const docRef = db.collection("users").doc(req.params.id);
-    if ((await docRef.get()).exists) {
-      await docRef.delete();
-      res.status(200).json({ message: "User deleted successfully" });
+    const userDoc = doc(usersCollection, req.params.id);
+    if ((await getDoc(userDoc)).exists()) {
+      await deleteDoc(userDoc);
+      res
+        .status(200)
+        .json({ message: "User deleted successfully", id: req.params.id });
     } else {
-      res.status(404).json({ message: "No user found to delete" });
+      res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json(error);
   }
 };

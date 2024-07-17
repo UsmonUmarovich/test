@@ -1,23 +1,19 @@
-import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import "dotenv/config";
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
-const serviceAccountBase64 = process.env.SERVICE_ACCOUNT_KEY;
-
-if (!serviceAccountBase64) {
-  throw new Error("Missing FIREBASE_SERVICE_ACCOUNT environment variable");
-}
-
-const serviceAccount = JSON.parse(
-  Buffer.from(serviceAccountBase64, "base64").toString("utf-8")
-);
-
-initializeApp({
-  credential: cert(serviceAccount),
+const firebaseConfig = {
+  apiKey: "AIzaSyCKJksMRrT4AdF9e-I5yDT_xwl4oL56LvE",
+  authDomain: "test-d4ff8.firebaseapp.com",
   databaseURL:
     "https://test-d4ff8-default-rtdb.asia-southeast1.firebasedatabase.app",
-});
+  projectId: "test-d4ff8",
+  storageBucket: "test-d4ff8.appspot.com",
+  messagingSenderId: "221788458708",
+  appId: "1:221788458708:web:ecea098c1f7e8dfb8cf541",
+  measurementId: "G-CTR4BN1GDD",
+};
 
-const db = getFirestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export default db;
